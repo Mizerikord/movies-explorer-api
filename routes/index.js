@@ -43,10 +43,10 @@ router.post('/signup', validateUser, usersController.createUser);
 router.use('/users', auth, userRouter);
 router.use('/movie', auth, movieRouter);
 
-router.use(errorLogger);
-
 router.use('*', () => {
   throw new NotFoundError('Запрашиваемая страница не найдена');
 });
+
+router.use(errorLogger);
 
 module.exports = router;

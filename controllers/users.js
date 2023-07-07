@@ -23,22 +23,18 @@ const getUsers = async (req, res, next) => {
 };
 
 const patchUser = (req, res, next) => {
-  const { name } = req.body;
+  const { name, email } = req.body;
   const userId = req.user._id;
   UserModel.findById(userId)
     .then((user) => {
-      if (!user) {
-        next(new AutorizationError('Необходимо авторизоваться'));
-        return;
-      }
-      if (user.name === name) {
+      if (user.name === name && user.email === email) {
         next(new DuplicateError('Это текущее имя пользователя'));
         return;
       }
       UserModel
         .findByIdAndUpdate(
           req.user._id,
-          { name },
+          { name, email },
           { new: true, runValidators: true },
         )
         .then((newUser) => {

@@ -9,9 +9,6 @@ const validateUser = celebrate({
     email: Joi.string().email().required(),
     password: Joi.string().required(),
   }),
-  params: Joi.object({
-    userId: Joi.string().hex().length(24),
-  }),
 });
 
 const validateMovie = celebrate({
@@ -46,15 +43,13 @@ const validateMovie = celebrate({
 const validateUserData = celebrate({
   body: Joi.object().keys({
     name: Joi.string().min(2).max(30).default('Жак-Ив Кусто'),
-  }),
-  params: Joi.object({
-    _Id: Joi.string().hex().length(24),
+    email: Joi.string().email().required(),
   }),
 });
 
 const validateMovieId = celebrate({
   params: Joi.object({
-    _Id: Joi.string().hex().length(24),
+    _id: Joi.string().hex().length(24).required(),
   }),
 });
 
