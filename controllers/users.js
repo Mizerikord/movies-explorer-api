@@ -28,7 +28,7 @@ const patchUser = (req, res, next) => {
   UserModel.findById(userId)
     .then((user) => {
       if (user.name === name && user.email === email) {
-        next(new DuplicateError('Это текущее имя пользователя'));
+        next(new DuplicateError('Новые данные совпадают со прежними'));
         return;
       }
       UserModel
@@ -49,6 +49,11 @@ const patchUser = (req, res, next) => {
           });
         })
         .catch((err) => {
+          console.log(err.codeName);
+          if (err.codeName === 'DuplicateKey') {
+            next(new DuplicateError('Новые данные совпадают со прежними'));
+            return;
+          }
           if (err.name === 'ValidationError') {
             next(new ValidationError('Некорректные данные'));
             return;
