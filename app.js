@@ -7,7 +7,7 @@ const { errorHandler } = require('./middlewares/errorHandler');
 
 const app = express();
 
-const { PORT = 3000, BD_NAME = 'mongodb://127.0.0.1:27017/filmsdb', NODE_ENV = 'production' } = process.env;
+const { PORT = 3001, BD_NAME = 'mongodb://127.0.0.1:27017/filmsdb', NODE_ENV = 'production' } = process.env;
 
 app.use(express.json());
 

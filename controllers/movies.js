@@ -35,6 +35,7 @@ const createMovie = (req, res, next) => {
   MovieModel
     .create({ ...req.body })
     .then((movie) => {
+      console.log(movie);
       res.status(201).send({
         movieId: movie._id,
         country: movie.country,

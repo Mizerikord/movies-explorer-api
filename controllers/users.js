@@ -66,7 +66,6 @@ const patchUser = (req, res, next) => {
 };
 
 const createUser = (req, res, next) => {
-  console.log(req.body);
   const { name, email } = req.body;
   bcrypt.hash(req.body.password, 10)
     .then((hash) => UserModel
