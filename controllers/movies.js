@@ -2,6 +2,7 @@ const MovieModel = require('../models/movie');
 const NotFoundError = require('../errors/NotFoundError');
 const ForbiddenError = require('../errors/ForbiddenError');
 const ValidationError = require('../errors/ValidationErrors');
+const DuplicateError = require('../errors/DuplicateError');
 
 const getMovies = async (req, res, next) => {
   const userId = req.user._id;
@@ -21,9 +22,10 @@ const getMovies = async (req, res, next) => {
         trailerLink: movie.trailerLink,
         thumbnail: movie.thumbnail,
         owner: movie.owner,
-        movieId: movie._id,
+        movieId: movie.movieId,
         nameRU: movie.nameRU,
         nameEN: movie.nameEN,
+        _id: movie._id,
       })));
     })
     .catch(next);
@@ -31,9 +33,10 @@ const getMovies = async (req, res, next) => {
 
 const createMovie = (req, res, next) => {
   MovieModel
-    .create({ ...req.body, owner: req.user._id })
+    .create({ ...req.body })
     .then((movie) => {
       res.status(201).send({
+        movieId: movie._id,
         country: movie.country,
         director: movie.director,
         duration: movie.duration,
@@ -43,15 +46,19 @@ const createMovie = (req, res, next) => {
         trailerLink: movie.trailerLink,
         thumbnail: movie.thumbnail,
         owner: movie.owner,
-        movieId: movie.movieId,
         nameRU: movie.nameRU,
         nameEN: movie.nameEN,
-        email: movie.email,
+        _id: movie._id,
       });
     })
     .catch((err) => {
+      console.log(err);
       if (err.name === 'ValidationError') {
         next(new ValidationError('Внесены некорректные данные'));
+        return;
+      }
+      if (err.code === 11000) {
+        next(new DuplicateError('Уже сохранено'));
         return;
       }
       next(err);
@@ -60,7 +67,7 @@ const createMovie = (req, res, next) => {
 };
 
 const deleteMovie = (req, res, next) => {
-  const movieId = req.params._Id;
+  const movieId = req.params._id;
   const userId = req.user._id;
   MovieModel.findById(movieId)
     .then((movie) => {

@@ -13,30 +13,31 @@ const validateUser = celebrate({
 
 const validateMovie = celebrate({
   body: Joi.object().keys({
-    country: Joi.string().min(2).max(30).required()
-      .default('Россия'),
-    director: Joi.string().min(2).max(30).required()
-      .default('Жак-Ив-Кусто'),
+    movieId: Joi.number(),
+    country: Joi.string().min(2).max(100).required()
+      .default('Неизвестно'),
+    director: Joi.string().min(2).max(100).required()
+      .default('Неизвестно'),
     duration: Joi.number().required()
       .default(0),
     year: Joi.number().max(2023).required()
       .default('2023'),
-    description: Joi.string().min(2).max(300).required()
+    description: Joi.string().min(2).max(3000).required()
       .default('Здесь может быть короткое описание'),
     image: Joi.string().required()
       .default('https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png')
       .regex(regex),
     trailerLink: Joi.string().required()
-      .default('https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png')
-      .regex(regex),
+      .default('https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png'),
     thumbnail: Joi.string().required()
-      .default('https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png')
-      .regex(regex),
-    movieId: Joi.string(),
-    nameRU: Joi.string().min(2).max(30).required()
+      .default('https://pictures.s3.yandex.net/resources/jacques-cousteau_1604399756.png'),
+    nameRU: Joi.string().min(2).max(100).required()
       .default('Фильм'),
-    nameEN: Joi.string().min(2).max(30).required()
+    nameEN: Joi.string().min(2).max(100).required()
       .default('Film'),
+    owner: Joi.string(),
+    created_at: Joi.string(),
+    updated_at: Joi.string(),
   }),
 });
 
