@@ -1,6 +1,5 @@
 const MovieModel = require('../models/movie');
 const NotFoundError = require('../errors/NotFoundError');
-const ForbiddenError = require('../errors/ForbiddenError');
 const ValidationError = require('../errors/ValidationErrors');
 const DuplicateError = require('../errors/DuplicateError');
 
@@ -91,10 +90,12 @@ const createNewMovie = (req, res, next) => {
 };
 
 const createMovie = (req, res, next) => {
+  console.log(req.body);
   MovieModel.find({ movieId: req.body.movieId })
     .then((movies) => {
       if (!movies || movies.length === 0) {
         createNewMovie(req, res, next);
+        return;
       }
       updateMovie(req, res, next);
     })
@@ -104,37 +105,70 @@ const createMovie = (req, res, next) => {
     });
 };
 
+const ownerDelete = (res, next, own, currentId) => {
+  console.log('овнер');
+  MovieModel.findByIdAndUpdate(
+    { _id: currentId },
+    { $pull: { owner: own } },
+    { new: true },
+  ).then((movie) => {
+    if (!movie) {
+      next(new NotFoundError('Уже удалено'));
+      return;
+    }
+    res.status(200).send({
+      data: movie,
+      message: 'Данные о фильме успешно удалены',
+    });
+  })
+    .catch((err) => {
+      if (err.name === 'CastError') {
+        next(new ValidationError('Карточка с таким id не найдена'));
+        return;
+      }
+      next(err);
+    })
+    .catch(next);
+};
+
+const movieDelete = (req, res, next, currentId) => {
+  console.log('муви');
+  MovieModel
+    .findByIdAndRemove(currentId)
+    .then((deletedMovie) => {
+      res.status(200).send({
+        data: deletedMovie,
+        message: 'Данные о фильме успешно удалены',
+      });
+    })
+    .catch((err) => {
+      if (err.name === 'NotFoundError') {
+        next(new NotFoundError('Информация фильме не найдена'));
+      }
+    })
+    .catch(next);
+};
+
 const deleteMovie = (req, res, next) => {
-  const movieId = req.params._id;
+  console.log(req.user, req.params._id);
+  const currentId = req.params._id;
   const userId = req.user._id;
-  MovieModel.findById(movieId)
+  MovieModel.findById(currentId)
     .then((movie) => {
-      const owner = movie.owner.toString();
       if (!movie) {
         next(new NotFoundError('Вероятно, фильм уже удален'));
         return;
       }
-      if (owner !== userId) {
-        next(new ForbiddenError('Пользователи не совпадают, удаление запрещено'));
+      console.log(movie.owner.length);
+      if (movie.owner.length === 1) {
+        movieDelete(req, res, next, movie._id);
         return;
       }
-      MovieModel
-        .findByIdAndRemove(movieId)
-        .then((deletedMovie) => {
-          res.status(200).send({
-            data: deletedMovie,
-            message: 'Данные о фильме успешно удалены',
-          });
-        });
-    })
-    .catch((err) => {
-      if (err.name === 'NotFoundError') {
-        next(new NotFoundError('Информация не найдена'));
-        return;
-      }
-      next();
-    })
-    .catch(next);
+      ownerDelete(res, next, userId, currentId);
+    }).catch((err) => {
+      next(err);
+      console.log(err);
+    });
 };
 
 module.exports = {
