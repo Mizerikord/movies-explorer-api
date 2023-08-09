@@ -21,7 +21,7 @@ const getMovies = async (req, res, next) => {
         image: movie.image,
         trailerLink: movie.trailerLink,
         thumbnail: movie.thumbnail,
-        owner: movie.owner,
+        owner: [movie.owner],
         movieId: movie.movieId,
         nameRU: movie.nameRU,
         nameEN: movie.nameEN,
@@ -31,11 +31,35 @@ const getMovies = async (req, res, next) => {
     .catch(next);
 };
 
-const createMovie = (req, res, next) => {
+const updateMovie = (req, res, next) => {
+  MovieModel.findOneAndUpdate(
+    { movieId: req.body.movieId },
+    { $addToSet: { owner: req.body.owner } },
+    { new: true },
+  ).then((newMovie) => {
+    if (!newMovie) {
+      next(new NotFoundError('Карточка не найдена'));
+      return;
+    }
+    res.status(200).send(newMovie);
+  }).catch((err) => {
+    if (err.message === 'NotFound') {
+      next(new NotFoundError('Карточка не найдена'));
+      return;
+    }
+    if (err.name === 'CastError') {
+      next(new ValidationError('Карточка с таким id не найдена'));
+      return;
+    }
+    next(err);
+  })
+    .catch(next);
+};
+
+const createNewMovie = (req, res, next) => {
   MovieModel
     .create({ ...req.body })
     .then((movie) => {
-      console.log(movie);
       res.status(201).send({
         movieId: movie._id,
         country: movie.country,
@@ -53,7 +77,6 @@ const createMovie = (req, res, next) => {
       });
     })
     .catch((err) => {
-      console.log(err);
       if (err.name === 'ValidationError') {
         next(new ValidationError('Внесены некорректные данные'));
         return;
@@ -65,6 +88,20 @@ const createMovie = (req, res, next) => {
       next(err);
     })
     .catch(next);
+};
+
+const createMovie = (req, res, next) => {
+  MovieModel.find({ movieId: req.body.movieId })
+    .then((movies) => {
+      if (!movies || movies.length === 0) {
+        createNewMovie(req, res, next);
+      }
+      updateMovie(req, res, next);
+    })
+    .catch((err) => {
+      next(err);
+      console.log(err);
+    });
 };
 
 const deleteMovie = (req, res, next) => {

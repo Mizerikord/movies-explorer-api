@@ -49,11 +49,12 @@ const movieSchema = new mongoose.Schema({
     },
     required: [true, 'Необходимо указать ссылку на постер'],
   },
-  owner: {
+  owner: [{
     type: mongoose.Schema.Types.ObjectId,
     ref: 'user',
     required: true,
-  },
+    default: [],
+  }],
   movieId: {
     type: Number,
     unique: true,
