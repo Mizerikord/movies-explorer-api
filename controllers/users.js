@@ -10,14 +10,15 @@ const AutorizationError = require('../errors/AutorizationErrors');
 const NotFoundError = require('../errors/NotFoundError');
 const DuplicateError = require('../errors/DuplicateError');
 
-const getUsers = async (req, res, next) => {
-  await UserModel.find({})
-    .then((users) => {
-      res.status(200).send(users.map((currentUser) => ({
-        name: currentUser.name,
-        email: currentUser.email,
-        _id: currentUser._id,
-      })));
+const getUser = async (req, res, next) => {
+  const userId = req.user._id;
+  await UserModel.findById(userId)
+    .then((user) => {
+      res.status(200).send({
+        name: user.name,
+        email: user.email,
+        _id: user._id,
+      });
     })
     .catch(next);
 };
@@ -72,6 +73,7 @@ const createUser = (req, res, next) => {
         name, email, password: hash,
       }))
     .then((user) => {
+      console.log(user);
       if (!user) {
         return next(new NotFoundError('Не удалось создать пользователя'));
       }
@@ -80,6 +82,12 @@ const createUser = (req, res, next) => {
           name: user.name,
           email: user.email,
           _id: user._id,
+          token: jwt.sign(
+            { _id: user._id },
+            NODE_ENV === 'production' ? JWT_SECRET : 'dev-secret',
+            { expiresIn: '7d' },
+          ),
+          status: res.statusCode,
         },
       );
     })
@@ -127,7 +135,7 @@ const login = (req, res, next) => {
 };
 
 module.exports = {
-  getUsers,
+  getUser,
   login,
   patchUser,
   createUser,
